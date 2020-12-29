@@ -3,10 +3,13 @@ package com.capgemini.tlta.controller;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -95,15 +98,55 @@ public class AssessmentRestControllerIntegrationTest {
 				.andExpect(jsonPath("$[1].assessmentName", is("Jpa")));
 
 	}
-
+	
+	@Test
+    public void whenDeleteAssessment_thenNoAssessmentShouldBeFound() throws Exception {
+        Integer assessmentId = createTestAssessment("Jpa","MCQ",new Date(),4d);
+        
+        mvc.perform(delete("/api/assessments/{id}", assessmentId).contentType(MediaType.APPLICATION_JSON))
+          .andDo(print())
+          .andExpect(status().isOk());
+        
+        mvc.perform(get("/api/assessments/").contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$", hasSize(equalTo(0))));
+    }
+	
+	@Test
+    public void whenUpdateAssessment_thenAssessmentShouldBeUpdated() throws Exception {
+    	Assessment assessment = new Assessment("Java", "MCQ", new Date(), 2.0d);
+		assessment = repository.saveAndFlush(assessment);
+		
+		Assessment updatedAssessment = assessment;
+		updatedAssessment.setAssessmentName("Java Test");
+		updatedAssessment.setAssessmentTimeDuration(1d);
+		
+		mvc.perform(put("/api/assessments/")
+					.contentType(MediaType.APPLICATION_JSON)
+					.content(JsonUtil.toJson(updatedAssessment)))
+					.andDo(print())
+					.andExpect(status().isOk());
+		
+		mvc.perform(get("/api/assessments/").contentType(MediaType.APPLICATION_JSON))
+        .andDo(print())
+        .andExpect(status().isOk())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$", hasSize(equalTo(1))))
+        .andExpect(jsonPath("$[0].assessmentName", is("Java Test")))
+        .andExpect(jsonPath("$[0].assessmentTimeDuration", is(1d)));
+    }
+    
+	
 	/**
 	 * Creates the test assessment.
 	 *
 	 * @param name the name
 	 */
-	private void createTestAssessment(String name,String type,Date date,Double time) {
-		Assessment emp = new Assessment(name,type,date,time);
-		repository.saveAndFlush(emp);
+	private Integer createTestAssessment(String name,String type,Date date,Double time) {
+		Assessment assessment = new Assessment(name,type,date,time);
+		repository.saveAndFlush(assessment);
+		return assessment.getId();
 	}
-
 }

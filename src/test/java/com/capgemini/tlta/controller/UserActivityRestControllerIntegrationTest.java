@@ -101,8 +101,10 @@ public class UserActivityRestControllerIntegrationTest {
 		
 		mvc.perform(post("/api/userActivity/")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(JsonUtil.toJson(activityDo)));
-
+				.content(JsonUtil.toJson(activityDo)))
+				.andDo(print())
+				.andExpect(status().isOk());
+		
 		List<UserActivity> found = userActivityRepository.findAll();
 		assertNotNull(found.get(0));
 	}
@@ -160,6 +162,7 @@ public class UserActivityRestControllerIntegrationTest {
 		userActivityRepository.flush();
 		
 		mvc.perform(delete("/api/userActivity/{id}", userActivity.getUserActivityId()))
+					.andExpect(status().isOk())
 					.andDo(print());
 		
 		mvc.perform(get("/api/userActivity/").contentType(MediaType.APPLICATION_JSON))
@@ -195,7 +198,8 @@ public class UserActivityRestControllerIntegrationTest {
 		String updatedStatus = "Pending";
 		
 		mvc.perform(put("/api/userActivity/updateStatus/{id}/{status}", userActivity.getUserActivityId(), updatedStatus))
-					.andDo(print());
+					.andDo(print())
+					.andExpect(status().isOk());
 		
 		mvc.perform(get("/api/userActivity/").contentType(MediaType.APPLICATION_JSON))
         .andDo(print())

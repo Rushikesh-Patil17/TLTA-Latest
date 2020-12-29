@@ -140,7 +140,7 @@ public class RegisterUserController {
 			response = RegisterUser.class,
 			tags = "update user first name",
 			consumes = "User id and first name sents as response body",
-			httpMethod = "PUT") 
+			httpMethod = "PUT")
 
 	//http://localhost:8081/springfox/api/users/1/Komal/
 	@PutMapping("/{id}/{firstName}/")	
